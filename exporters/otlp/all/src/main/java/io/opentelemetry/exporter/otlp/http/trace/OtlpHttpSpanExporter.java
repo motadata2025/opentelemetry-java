@@ -235,7 +235,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
           }
           catch (Exception exception)
           {
-
+              logger.warning(exception.getMessage());
           }
         }
 
@@ -260,12 +260,12 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
   }
 
 
-  private Map<String, Object> parseAttribute(String attributes) {
+  private static Map<String, Object> parseAttribute(String attributes) {
     ObjectMapper objectMapper = new ObjectMapper();
     Map<String, Object> attributeMap = new HashMap<>();
 
     try {
-      if (attributes != null && !attributes.isEmpty()) {
+      if (!attributes.isEmpty()) {
         // Convert Vert.x JsonArray to Jackson JsonNode
         JsonNode arrayNode = objectMapper.readTree(attributes);
 
