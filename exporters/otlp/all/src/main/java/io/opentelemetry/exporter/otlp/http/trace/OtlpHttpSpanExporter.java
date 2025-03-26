@@ -223,8 +223,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
 
         String content = segmentedStringWriter.getAndClear();
 
-        logger.info("Writing trace file: " + content);
-
         FileUtils.writeByteArrayToFile(new File(filePath), Snappy.compress(content));
 
       } catch (IOException ignore) {
