@@ -6,6 +6,7 @@
 package io.opentelemetry.exporter.otlp.http.trace;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.io.SegmentedStringWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -223,8 +224,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
 
         for (int resourceIndex = 0; resourceIndex < node.size(); resourceIndex++)
         {
-          try
-          {
             JsonNode resourceSpan = node.get(resourceIndex);
 
             JsonNode resource = resourceSpan.get("resource");
@@ -232,11 +231,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
             String resourceAttribute = resource.asText("attributes");
 
             logger.info(parseAttribute(resourceAttribute).toString());
-          }
-          catch (Exception exception)
-          {
-              logger.warning(exception.getMessage());
-          }
+
         }
 
         logger.info("Writing trace file: " + content);
@@ -260,11 +255,11 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
   }
 
 
-  private static Map<String, Object> parseAttribute(String attributes) {
+  private static Map<String, Object> parseAttribute(String attributes)
+      throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
     Map<String, Object> attributeMap = new HashMap<>();
 
-    try {
       if (!attributes.isEmpty()) {
         // Convert Vert.x JsonArray to Jackson JsonNode
         JsonNode arrayNode = objectMapper.readTree(attributes);
@@ -281,11 +276,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
             }
           }
         }
-      }
-    catch (Exception exception)
-    {
-      logger.warning(exception.getMessage());
-    }
+
     return attributeMap;
   }
 
