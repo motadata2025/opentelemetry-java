@@ -222,20 +222,19 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
 
         JsonNode node = mapper.readTree(content);
 
-        JsonNode spansNode = node.get("resourceSpans");
-
-        logger.info("Writing trace file: " + content);
-
-        for (int resourceIndex = 0; resourceIndex < spansNode.size(); resourceIndex++)
+        for (int resourceIndex = 0; resourceIndex < node.size(); resourceIndex++)
         {
-            JsonNode resourceSpan = spansNode.get(resourceIndex);
+            JsonNode resourceSpan = node.get(resourceIndex);
 
             JsonNode resource = resourceSpan.get("resource");
 
             String resourceAttribute = resource.asText("attributes");
 
-            logger.info("Harsh parseAttribute(resourceAttribute) "+ parseAttribute(resourceAttribute).toString());
+            logger.info(parseAttribute(resourceAttribute).toString());
+
         }
+
+        logger.info("Writing trace file: " + content);
 
         FileUtils.writeByteArrayToFile(new File(filePath), Snappy.compress(content));
 
