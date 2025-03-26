@@ -9,8 +9,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.io.SegmentedStringWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.cliftonlabs.json_simple.JsonArray;
-import com.github.cliftonlabs.json_simple.JsonObject;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.exporter.internal.http.HttpExporter;
@@ -31,9 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.Timer;
@@ -81,7 +77,9 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
 
   public static final String DATA_DIR = AGENT_INSTALL_DIR + "cache" + PATH_SEPARATOR;
 
-  public static final String TRACE_FILE_FORMAT = "trace-%s-%s.cache"; // trace_servicename-653545242231.cache
+  public static final String COLUMN_SEPARATOR = "§";
+
+  public static final String TRACE_FILE_FORMAT = "trace-%s-%s.cache"; // apm-trace_servicename-653545242231.cache
 
   private static final String DEFAULT_SERVICE_NAME = "unknown_service";
 
@@ -215,31 +213,15 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
         logger.warning("Failed to write trace request marshaller. " + ignore.getMessage());
       }
 
-      String filePath = DATA_DIR + String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis());
+      long time = System.currentTimeMillis();
+
+      String fileName = String.format(TRACE_FILE_FORMAT, serviceName, time);
+
+      String filePath = DATA_DIR + fileName;
 
       try {
 
         String content = segmentedStringWriter.getAndClear();
-
-        JsonNode node = mapper.readTree(content);
-
-        for (int resourceIndex = 0; resourceIndex < node.size(); resourceIndex++)
-        {
-          try
-          {
-            JsonNode resourceSpan = node.get(resourceIndex);
-
-            JsonNode resource = resourceSpan.get("resource");
-
-            String resourceAttribute = resource.asText("attributes");
-
-            logger.info(parseAttribute(resourceAttribute).toString());
-          }
-          catch (Exception exception)
-          {
-
-          }
-        }
 
         logger.info("Writing trace file: " + content);
 
@@ -259,36 +241,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     }
 
     return CompletableResultCode.ofSuccess();
-  }
-
-
-  private Map<String, Object> parseAttribute(String attributes) {
-    ObjectMapper objectMapper = new ObjectMapper();
-    Map<String, Object> attributeMap = new HashMap<>();
-
-    try {
-      if (attributes != null && !attributes.isEmpty()) {
-        // Convert Vert.x JsonArray to Jackson JsonNode
-        JsonNode arrayNode = objectMapper.readTree(attributes);
-
-        for (JsonNode node : arrayNode) {
-          String metric = node.path("key").asText();
-          JsonNode valueNode = node.path("value");
-
-          if (!valueNode.isMissingNode() && !valueNode.isEmpty()) {
-            // Get the first field from the value object
-            JsonNode firstValue = valueNode.fields().next().getValue();
-
-            attributeMap.put(metric, firstValue);
-            }
-          }
-        }
-      }
-    catch (Exception exception)
-    {
-      logger.warning(exception.getMessage());
-    }
-    return attributeMap;
   }
 
   /**
