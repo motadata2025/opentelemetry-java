@@ -77,9 +77,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
 
   public static final String DATA_DIR = AGENT_INSTALL_DIR + "cache" + PATH_SEPARATOR;
 
-  public static final String COLUMN_SEPARATOR = "§";
-
-  public static final String TRACE_FILE_FORMAT = "trace-%s-%s.cache"; // apm-trace_servicename-653545242231.cache
+  public static final String TRACE_FILE_FORMAT = "trace-%s-%s.cache"; // trace_servicename-653545242231.cache
 
   private static final String DEFAULT_SERVICE_NAME = "unknown_service";
 
@@ -113,8 +111,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
       logger.info(String.format("/trace.agent/%s/service.trace.state", serviceName) + " : " + rootNode.at(String.format("/trace.agent/%s/service.trace.state", serviceName)).asText());
 
       logger.info("Agent running status : " + isAgentRunning);
-
-      logger.info("Agent dir " + AGENT_INSTALL_DIR);
 
       isShutdown.set(!isAgentRunning);
     }
@@ -183,8 +179,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
           updateExportStatus();
         }
       }, 0L, SERVICE_CHECK_TIME * 1000L);
-    } else {
-      serviceName = DEFAULT_SERVICE_NAME;
     }
   }
 
@@ -213,23 +207,16 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
         logger.warning("Failed to write trace request marshaller. " + ignore.getMessage());
       }
 
-      long time = System.currentTimeMillis();
-
-      String fileName = String.format(TRACE_FILE_FORMAT, serviceName, time);
-
-      String filePath = DATA_DIR + fileName;
-
       try {
 
         String content = segmentedStringWriter.getAndClear();
 
-        FileUtils.writeByteArrayToFile(new File(filePath), Snappy.compress(content));
+        FileUtils.writeByteArrayToFile(new File(DATA_DIR +
+            String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(content));
 
       } catch (IOException ignore) {
         logger.warning("Failed to write into file: " + Arrays.toString(ignore.getStackTrace()));
       }
-
-      marshaler.export(spans);
 
       return CompletableResultCode.ofSuccess();
     }
