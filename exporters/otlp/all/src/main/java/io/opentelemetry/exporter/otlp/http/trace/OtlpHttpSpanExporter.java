@@ -190,39 +190,33 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
    */
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
-
     if (!isServiceNameSet.get()) {
       setServiceName(spans);
     }
 
-    if (!isShutdown.get() && isServiceNameSet.get()) {
-      TraceRequestMarshaler traceRequestMarshaler = TraceRequestMarshaler.create(spans);
+    try {
+      if (!isShutdown.get() && isServiceNameSet.get()) {
 
-      SegmentedStringWriter segmentedStringWriter =
-          new SegmentedStringWriter(JsonUtil.JSON_FACTORY._getBufferRecycler());
+        TraceRequestMarshaler traceRequestMarshaler = TraceRequestMarshaler.create(spans);
+        SegmentedStringWriter segmentedStringWriter =
+            new SegmentedStringWriter(JsonUtil.JSON_FACTORY._getBufferRecycler());
 
-      try (JsonGenerator gen = JsonUtil.create(segmentedStringWriter)) {
+        JsonGenerator gen = JsonUtil.create(segmentedStringWriter);
         traceRequestMarshaler.writeJsonToGenerator(gen);
-      } catch (IOException ignore) {
-        logger.warning("Failed to write trace request marshaller. " + ignore.getMessage());
-      }
-
-      try {
 
         String content = segmentedStringWriter.getAndClear();
-
         FileUtils.writeByteArrayToFile(new File(DATA_DIR +
-            String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(content));
+              String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(content));
 
-      } catch (IOException ignore) {
-        logger.warning("Failed to write into file: " + Arrays.toString(ignore.getStackTrace()));
+        return CompletableResultCode.ofSuccess();
+      }
+      else
+      {
+        throw new Exception("Agent is not running, hence skipping the export");
       }
 
-      return CompletableResultCode.ofSuccess();
-    }
-    else
-    {
-      logger.info("Agent is not running, hence skipping the export");
+    }catch(Exception exception){
+      logger.warning(String.format("Failed to write into file: %s", exception.getMessage()));
     }
 
     return CompletableResultCode.ofSuccess();
