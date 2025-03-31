@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -197,16 +198,8 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     try {
       if (!isShutdown.get() && isServiceNameSet.get()) {
 
-        TraceRequestMarshaler traceRequestMarshaler = TraceRequestMarshaler.create(spans);
-        SegmentedStringWriter segmentedStringWriter =
-            new SegmentedStringWriter(JsonUtil.JSON_FACTORY._getBufferRecycler());
-
-        JsonGenerator gen = JsonUtil.create(segmentedStringWriter);
-        traceRequestMarshaler.writeJsonToGenerator(gen);
-
-        String content = segmentedStringWriter.getAndClear();
         FileUtils.writeByteArrayToFile(new File(DATA_DIR +
-              String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(content));
+              String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(serializeAsOtlp(spans)));
 
         return CompletableResultCode.ofSuccess();
       }
@@ -263,5 +256,12 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     }
 
     return time == null ? 30 : Integer.min(Integer.max(Integer.parseInt(time), 30), 120);
+  }
+
+  private byte[] serializeAsOtlp(Collection<SpanData> spans) throws IOException {
+    TraceRequestMarshaler traceRequest = TraceRequestMarshaler.create(spans);
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    traceRequest.writeBinaryTo(output);
+    return Snappy.compress(output.toByteArray());
   }
 }
