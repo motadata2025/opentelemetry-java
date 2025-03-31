@@ -258,7 +258,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     return time == null ? 30 : Integer.min(Integer.max(Integer.parseInt(time), 30), 120);
   }
 
-  private byte[] serializeAsOtlp(Collection<SpanData> spans) throws IOException {
+  public byte[] serializeAsOtlp(Collection<SpanData> spans) throws IOException {
     TraceRequestMarshaler traceRequest = TraceRequestMarshaler.create(spans);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     traceRequest.writeBinaryTo(output);
