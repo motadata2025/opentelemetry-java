@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.kotlin.org.apache.commons.io.output.ByteArrayOutputStream;
 import org.xerial.snappy.Snappy;
 
 /**
@@ -198,27 +199,15 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     if (!isShutdown.get() && isServiceNameSet.get()) {
       TraceRequestMarshaler traceRequestMarshaler = TraceRequestMarshaler.create(spans);
 
-      SegmentedStringWriter segmentedStringWriter =
-          new SegmentedStringWriter(JsonUtil.JSON_FACTORY._getBufferRecycler());
-
-      try (JsonGenerator gen = JsonUtil.create(segmentedStringWriter)) {
-        traceRequestMarshaler.writeJsonToGenerator(gen);
-      } catch (IOException ignore) {
-        logger.warning("Failed to write trace request marshaller. " + ignore.getMessage());
-      }
-
-      try {
-
-        String content = segmentedStringWriter.getAndClear();
+      try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+        traceRequestMarshaler.writeBinaryTo(output);
 
         FileUtils.writeByteArrayToFile(new File(DATA_DIR +
-            String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(content));
+            String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(output.toByteArray()));
 
-      } catch (IOException ignore) {
-        logger.warning("Failed to write into file: " + Arrays.toString(ignore.getStackTrace()));
+      } catch (IOException exception) {
+        logger.warning("Failed to write trace request marshaller. " + exception.getMessage());
       }
-
-      return CompletableResultCode.ofSuccess();
     }
     else
     {
