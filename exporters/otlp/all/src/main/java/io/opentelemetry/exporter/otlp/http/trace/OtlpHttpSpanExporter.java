@@ -34,8 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.kotlin.org.apache.commons.io.output.ByteArrayOutputStream;
 import org.xerial.snappy.Snappy;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Exports spans using OTLP via HTTP, using OpenTelemetry's protobuf model.
