@@ -20,8 +20,8 @@ import javax.annotation.concurrent.Immutable;
  * equals/hashCode implementations. If an implementation does not strictly conform to these
  * requirements, behavior of the OpenTelemetry APIs and default SDK cannot be guaranteed. It is
  * strongly suggested that you use the implementation that is provided here via {@link
- * #create(String, String, TraceFlags, TraceState)} or {@link #createFromRemoteParent(String,
- * String, TraceFlags, TraceState)}.
+ * #create(String, String, TraceFlags, TraceState, String)} or {@link #createFromRemoteParent(String,
+ * String, TraceFlags, TraceState, String)}.
  */
 @Immutable
 public interface SpanContext {
@@ -50,12 +50,13 @@ public interface SpanContext {
    * @return a new {@code SpanContext} with the given identifiers and options.
    */
   static SpanContext create(
-      String traceIdHex, String spanIdHex, TraceFlags traceFlags, TraceState traceState) {
+      String traceIdHex, String spanIdHex, TraceFlags traceFlags, TraceState traceState, String from) {
     return ImmutableSpanContext.create(
         traceIdHex,
         spanIdHex,
         traceFlags,
         traceState,
+        from,
         /* remote= */ false,
         /* skipIdValidation= */ false);
   }

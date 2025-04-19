@@ -211,7 +211,7 @@ public final class W3CTraceContextPropagator implements TextMapPropagator {
     TraceFlags traceFlags =
         TraceFlags.fromByte(
             OtelEncodingUtils.byteFromBase16(firstTraceFlagsChar, secondTraceFlagsChar));
-    return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, TraceState.getDefault());
+    return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, TraceState.getDefault(), traceparent);
   }
 
   @Override
