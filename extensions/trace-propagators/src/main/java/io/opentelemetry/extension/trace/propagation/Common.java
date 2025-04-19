@@ -34,7 +34,7 @@ final class Common {
   private Common() {}
 
   static SpanContext buildSpanContext(
-      @Nullable String traceId, @Nullable String spanId, @Nullable String sampled) {
+      @Nullable String traceId, @Nullable String spanId, @Nullable String sampled, @Nullable String from) {
     if (traceId == null || spanId == null) {
       return SpanContext.getInvalid();
     }
@@ -44,11 +44,12 @@ final class Common {
               ? TraceFlags.getSampled()
               : TraceFlags.getDefault();
 
+      assert from != null;
       return SpanContext.createFromRemoteParent(
           StringUtils.padLeft(traceId, MAX_TRACE_ID_LENGTH),
           StringUtils.padLeft(spanId, MAX_SPAN_ID_LENGTH),
           traceFlags,
-          TraceState.getDefault());
+          TraceState.getDefault(), from);
     } catch (RuntimeException e) {
       logger.log(Level.FINE, "Error parsing header. Returning INVALID span context.", e);
       return SpanContext.getInvalid();

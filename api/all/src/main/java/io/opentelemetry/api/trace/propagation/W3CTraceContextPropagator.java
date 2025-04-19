@@ -168,7 +168,7 @@ public final class W3CTraceContextPropagator implements TextMapPropagator {
           contextFromParentHeader.getTraceId(),
           contextFromParentHeader.getSpanId(),
           contextFromParentHeader.getTraceFlags(),
-          traceState);
+          traceState, contextFromParentHeader.getFrom());
     } catch (IllegalArgumentException e) {
       logger.fine("Unparseable tracestate header. Returning span context without state.");
       return contextFromParentHeader;

@@ -41,8 +41,9 @@ public final class OtTracePropagator implements TextMapPropagator {
   static final String SPAN_ID_HEADER = "ot-tracer-spanid";
   static final String SAMPLED_HEADER = "ot-tracer-sampled";
   static final String PREFIX_BAGGAGE_HEADER = "ot-baggage-";
+  static final String SERVICE_NAME_FROM_HEADER = "ot-service-name-from";
   private static final Collection<String> FIELDS =
-      Collections.unmodifiableList(Arrays.asList(TRACE_ID_HEADER, SPAN_ID_HEADER, SAMPLED_HEADER));
+      Collections.unmodifiableList(Arrays.asList(TRACE_ID_HEADER, SPAN_ID_HEADER, SAMPLED_HEADER, SERVICE_NAME_FROM_HEADER));
 
   private static final OtTracePropagator INSTANCE = new OtTracePropagator();
 
@@ -74,6 +75,7 @@ public final class OtTracePropagator implements TextMapPropagator {
         carrier, TRACE_ID_HEADER, spanContext.getTraceId().substring(TraceId.getLength() / 2));
     setter.set(carrier, SPAN_ID_HEADER, spanContext.getSpanId());
     setter.set(carrier, SAMPLED_HEADER, String.valueOf(spanContext.isSampled()));
+    setter.set(carrier, SERVICE_NAME_FROM_HEADER, System.getenv("otel.service.name"));
 
     // Baggage is only injected if there is a valid SpanContext
     Baggage baggage = Baggage.fromContext(context);
@@ -106,7 +108,8 @@ public final class OtTracePropagator implements TextMapPropagator {
             : StringUtils.padLeft(incomingSpanId, MAX_SPAN_ID_LENGTH);
 
     String sampled = getter.get(carrier, SAMPLED_HEADER);
-    SpanContext spanContext = buildSpanContext(traceId, spanId, sampled);
+    String from = getter.get(carrier, SERVICE_NAME_FROM_HEADER);
+    SpanContext spanContext = buildSpanContext(traceId, spanId, sampled, from);
     if (!spanContext.isValid()) {
       return context;
     }
@@ -139,11 +142,11 @@ public final class OtTracePropagator implements TextMapPropagator {
   }
 
   private static SpanContext buildSpanContext(
-      @Nullable String traceId, @Nullable String spanId, @Nullable String sampled) {
+      @Nullable String traceId, @Nullable String spanId, @Nullable String sampled, @Nullable String from) {
     if (!Common.isTraceIdValid(traceId) || !Common.isSpanIdValid(spanId)) {
       return SpanContext.getInvalid();
     }
-    return Common.buildSpanContext(traceId, spanId, sampled);
+    return Common.buildSpanContext(traceId, spanId, sampled, from);
   }
 
   @Override

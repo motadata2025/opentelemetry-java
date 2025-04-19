@@ -51,10 +51,10 @@ final class B3PropagatorExtractorMultipleHeaders implements B3PropagatorExtracto
       return Optional.of(
           context
               .with(B3Propagator.DEBUG_CONTEXT_KEY, true)
-              .with(Span.wrap(Common.buildSpanContext(traceId, spanId, Common.TRUE_INT))));
+              .with(Span.wrap(Common.buildSpanContext(traceId, spanId, Common.TRUE_INT, null))));
     }
 
     String sampled = getter.get(carrier, B3Propagator.SAMPLED_HEADER);
-    return Optional.of(context.with(Span.wrap(Common.buildSpanContext(traceId, spanId, sampled))));
+    return Optional.of(context.with(Span.wrap(Common.buildSpanContext(traceId, spanId, sampled, null))));
   }
 }

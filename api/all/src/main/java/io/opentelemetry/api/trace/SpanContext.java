@@ -73,15 +73,17 @@ public interface SpanContext {
    * @param spanIdHex the span identifier of the {@code SpanContext}.
    * @param traceFlags the trace flags of the {@code SpanContext}.
    * @param traceState the trace state for the {@code SpanContext}.
+   * @param from the source of the {@code SpanContext} (e.g. "b3", "jaeger").
    * @return a new {@code SpanContext} with the given identifiers and options.
    */
   static SpanContext createFromRemoteParent(
-      String traceIdHex, String spanIdHex, TraceFlags traceFlags, TraceState traceState) {
+      String traceIdHex, String spanIdHex, TraceFlags traceFlags, TraceState traceState, String from) {
     return ImmutableSpanContext.create(
         traceIdHex,
         spanIdHex,
         traceFlags,
         traceState,
+        from,
         /* remote= */ true,
         /* skipIdValidation= */ false);
   }
@@ -93,6 +95,8 @@ public interface SpanContext {
    * @return the trace identifier associated with this {@link SpanContext} as lowercase hex.
    */
   String getTraceId();
+
+  String getFrom();
 
   /**
    * Returns the trace identifier associated with this {@link SpanContext} as 16-byte array.

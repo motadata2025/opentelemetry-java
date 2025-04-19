@@ -13,6 +13,8 @@ import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.api.trace.TraceState;
 import javax.annotation.concurrent.Immutable;
 
+import static io.opentelemetry.api.baggage.Baggage.empty;
+
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
@@ -27,6 +29,7 @@ public abstract class ImmutableSpanContext implements SpanContext {
           SpanId.getInvalid(),
           TraceFlags.getDefault(),
           TraceState.getDefault(),
+          "",
           /* remote= */ false,
           /* valid= */ false);
 
@@ -35,10 +38,11 @@ public abstract class ImmutableSpanContext implements SpanContext {
       String spanId,
       TraceFlags traceFlags,
       TraceState traceState,
+      String from,
       boolean remote,
       boolean valid) {
     return new AutoValue_ImmutableSpanContext(
-        traceId, spanId, traceFlags, traceState, remote, valid);
+        traceId, spanId, traceFlags, traceState, from, remote, valid);
   }
 
   /**
@@ -63,17 +67,19 @@ public abstract class ImmutableSpanContext implements SpanContext {
       String spanIdHex,
       TraceFlags traceFlags,
       TraceState traceState,
+      String from,
       boolean remote,
       boolean skipIdValidation) {
     if (skipIdValidation || (SpanId.isValid(spanIdHex) && TraceId.isValid(traceIdHex))) {
       return createInternal(
-          traceIdHex, spanIdHex, traceFlags, traceState, remote, /* valid= */ true);
+          traceIdHex, spanIdHex, traceFlags, traceState, from, remote, /* valid= */ true);
     }
     return createInternal(
         TraceId.getInvalid(),
         SpanId.getInvalid(),
         traceFlags,
         traceState,
+        from,
         remote,
         /* valid= */ false);
   }
