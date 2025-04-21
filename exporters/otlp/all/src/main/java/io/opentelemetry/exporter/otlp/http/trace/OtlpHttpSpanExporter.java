@@ -214,6 +214,8 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
         FileUtils.writeByteArrayToFile(new File(DATA_DIR +
             String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(content));
 
+        marshaler.export(spans);
+
       } catch (IOException ignore) {
         logger.warning("Failed to write into file: " + Arrays.toString(ignore.getStackTrace()));
       }
