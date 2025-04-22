@@ -43,6 +43,7 @@ public final class W3CTraceContextPropagator implements TextMapPropagator {
 
   static final String TRACE_PARENT = "traceparent";
   static final String TRACE_STATE = "tracestate";
+  static final String SERVICE_NAME = "HelloHarsh";
   private static final List<String> FIELDS =
       Collections.unmodifiableList(Arrays.asList(TRACE_PARENT, TRACE_STATE));
 
@@ -127,6 +128,7 @@ public final class W3CTraceContextPropagator implements TextMapPropagator {
       return;
     }
     setter.set(carrier, TRACE_STATE, encodeTraceState(traceState));
+    setter.set(carrier, SERVICE_NAME, "TestHello");
   }
 
   @Override
