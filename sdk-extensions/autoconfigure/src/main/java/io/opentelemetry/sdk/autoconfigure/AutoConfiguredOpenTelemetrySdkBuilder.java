@@ -9,7 +9,6 @@ import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.events.GlobalEventLoggerProvider;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -494,8 +493,6 @@ public final class AutoConfiguredOpenTelemetrySdkBuilder implements AutoConfigur
 
         ContextPropagators propagators =
             PropagatorConfiguration.configurePropagators(config, spiHelper, propagatorCustomizer);
-
-        propagators.getTextMapPropagator().inject(Context.current(), new HashMap<>().put("Ashish", "Singh"), (carrier, key, value) -> {});
 
         OpenTelemetrySdkBuilder sdkBuilder =
             OpenTelemetrySdk.builder()
