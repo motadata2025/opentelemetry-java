@@ -19,7 +19,11 @@ dependencies {
   implementation(project(":exporters:otlp:common"))
   implementation(project(":exporters:sender:okhttp"))
   implementation(project(":sdk-extensions:autoconfigure-spi"))
-
+  implementation("com.fasterxml.jackson.core:jackson-core:2.15.2")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+  implementation(project(":exporters:logging-otlp"))
+  implementation("commons-io:commons-io:2.14.0")
+  implementation("org.xerial.snappy:snappy-java:1.1.10.1")
   compileOnly(project(":api:incubator"))
 
   compileOnly("io.grpc:grpc-stub")
