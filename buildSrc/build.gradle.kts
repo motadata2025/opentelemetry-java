@@ -6,11 +6,11 @@ plugins {
 }
 
 if (!hasLauncherForJavaVersion(17)) {
-  /*throw GradleException(
+  throw GradleException(
     "JDK 17 is required to build and gradle was unable to detect it on the system.  " +
         "Please install it and see https://docs.gradle.org/current/userguide/toolchains.html#sec:auto_detection " +
         "for details on how gradle detects java toolchains."
-  )*/
+  )
 }
 
 fun hasLauncherForJavaVersion(version: Int): Boolean {
