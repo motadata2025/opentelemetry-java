@@ -18,6 +18,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -28,33 +29,34 @@ public final class AgentStatusMonitor {
   private static final Logger logger = Logger.getLogger(AgentStatusMonitor.class.getName());
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  private static AgentConfiguration.SignalConfig signalConfig;
-  private static AtomicBoolean isShutdown = new AtomicBoolean(false);
-  private static AtomicBoolean isServiceNameSet = new AtomicBoolean(false);
-  private static Timer timer;
-  private static volatile String serviceName;
-
-  public AgentStatusMonitor(AgentConfiguration.SignalConfig config) {
-    signalConfig = config;
-    isShutdown = new AtomicBoolean(false);
-    isServiceNameSet = new AtomicBoolean(false);
-    timer = new Timer("Agent Config Check", true);
-    serviceName = AgentConfiguration.DEFAULT_SERVICE_NAME_VALUE;
-  }
+  @Nullable private static AgentConfiguration.SignalConfig signalConfig = null;
+  private static final AtomicBoolean isShutdown = new AtomicBoolean(false);
+  private static final AtomicBoolean isServiceNameSet = new AtomicBoolean(false);
+  @Nullable private static Timer timer = null;
+  @Nullable private static volatile String serviceName = null;
 
   /**
    * Initializes monitoring with the given service name and starts periodic status checks.
    *
    * @param name the service name to monitor
    */
+  @Nullable
   public static void initialize(String name) {
     if (name != null && !isServiceNameSet.get()) {
       isServiceNameSet.set(true);
       serviceName = name;
       logger.info("Open-telemetry agent service name : " + name);
 
-      int checkInterval =
-          AgentConfiguration.resolveServiceCheckTime(signalConfig.getCheckTimeProperty());
+      if (signalConfig == null) {
+        return;
+      }
+
+      String checkTimeProperty = signalConfig.getCheckTimeProperty();
+      int checkInterval = 0;
+
+      if (checkTimeProperty != null) {
+        checkInterval = AgentConfiguration.resolveServiceCheckTime(checkTimeProperty);
+      }
 
       if (timer == null) {
         timer = new Timer("Agent Config Check", true);
@@ -73,6 +75,7 @@ public final class AgentStatusMonitor {
     }
   }
 
+  @Nullable
   public static String extractServiceName(Collection<SpanData> spans) {
     SpanData spanData = !spans.isEmpty() ? spans.stream().findFirst().get() : null;
     Resource resource = spanData != null ? spanData.getResource() : null;
@@ -82,6 +85,7 @@ public final class AgentStatusMonitor {
   }
 
   // TODO -- we need to think of generic way to use only extractServiceName method...
+  @Nullable
   public static String extractServiceNameFromMetric(Collection<MetricData> metrics) {
     MetricData spanData = !metrics.isEmpty() ? metrics.stream().findFirst().get() : null;
     Resource resource = spanData != null ? spanData.getResource() : null;
@@ -95,6 +99,9 @@ public final class AgentStatusMonitor {
   }
 
   public static String getSignalFileFormat() {
+    if (signalConfig == null) {
+      return "";
+    }
     return String.format("%s%s", signalConfig.getFilePrefix(), signalConfig.getFileFormat());
   }
 
@@ -112,6 +119,7 @@ public final class AgentStatusMonitor {
    *
    * @return the service name
    */
+  @Nullable
   public static String getServiceName() {
     return serviceName;
   }
@@ -134,6 +142,10 @@ public final class AgentStatusMonitor {
 
   private static void updateExportStatus() {
     File configFile = new File(AgentConfiguration.CONFIG_FILE_PATH);
+
+    if (signalConfig == null || serviceName == null) {
+      return;
+    }
 
     try {
       JsonNode rootNode = mapper.readTree(configFile);

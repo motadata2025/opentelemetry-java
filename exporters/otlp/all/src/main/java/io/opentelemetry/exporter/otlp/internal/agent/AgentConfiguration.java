@@ -81,10 +81,10 @@ public final class AgentConfiguration {
    * any time.
    */
   public static final class SignalConfig {
-    private final String agentStatusPath;
-    private final String serviceStatePath;
-    private final String filePrefix;
-    private final String checkTimeProperty;
+    private String agentStatusPath = "";
+    private String serviceStatePath = "";
+    private String filePrefix = "";
+    private String checkTimeProperty = "";
 
     public SignalConfig(String signalType) {
       this.agentStatusPath = String.format("/agent/%s.agent.status", signalType);

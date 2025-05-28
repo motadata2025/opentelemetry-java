@@ -149,9 +149,9 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
           new File(
               AgentConfiguration.DATA_DIR
                   + String.format(
-                  AgentStatusMonitor.getSignalFileFormat(),
-                  AgentStatusMonitor.getServiceName(),
-                  System.currentTimeMillis())),
+                      AgentStatusMonitor.getSignalFileFormat(),
+                      AgentStatusMonitor.getServiceName(),
+                      System.currentTimeMillis())),
           Snappy.compress(output.toByteArray()));
 
     } catch (IOException exception) {
