@@ -76,7 +76,10 @@ public final class AgentConfiguration {
     }
   }
 
-  /** Signal-specific configuration for different telemetry types. */
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static final class SignalConfig {
     private final String agentStatusPath;
     private final String serviceStatePath;
