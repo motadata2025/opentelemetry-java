@@ -5,31 +5,16 @@
 
 package io.opentelemetry.exporter.otlp.http.trace;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.exporter.internal.http.HttpExporter;
 import io.opentelemetry.exporter.internal.http.HttpExporterBuilder;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.exporter.internal.otlp.traces.SpanReusableDataMarshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.export.MemoryMode;
-import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import java.io.File;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Locale;
-import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -43,74 +28,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
   private final HttpExporterBuilder<Marshaler> builder;
   private final HttpExporter<Marshaler> delegate;
   private final SpanReusableDataMarshaler marshaler;
-
-  private static final Logger logger = Logger.getLogger(OtlpHttpSpanExporter.class.getName());
-
-  private static final AtomicBoolean isShutdown = new AtomicBoolean(false);
-
-  private static final AtomicBoolean isServiceNameSet = new AtomicBoolean(false);
-
-  private static final String PATH_SEPARATOR = FileSystems.getDefault().getSeparator();
-
-  private static final String CONFIG_DIR = "config";
-
-  private static final String AGENT_CONFIG = "agent.json";
-
-  private static final String AGENT_RUNNING_STATUS_PATH = "/agent/agent.service.status";
-
-  private static final String AGENT_STATE_PATH = "/agent/agent.state";
-
-  private static final String TRACE_AGENT_STATE_PATH = "/agent/trace.agent.status";
-
-  private static final ObjectMapper mapper = new ObjectMapper();
-
-  public static final String AGENT_INSTALL_DIR = Optional.ofNullable(System.getProperty("otel.javaagent.configuration-file")).map(Paths::get).map(
-      Path::getParent).map(Path::getParent).orElseThrow(() -> new IllegalStateException("Invalid configuration file path")).toString() + PATH_SEPARATOR;
-
-  public static final String DATA_DIR = AGENT_INSTALL_DIR + "cache" + PATH_SEPARATOR;
-
-  public static final String TRACE_FILE_FORMAT = "trace-%s-%s.cache"; // trace_servicename-653545242231.cache
-
-  private static final String DEFAULT_SERVICE_NAME = "unknown_service";
-
-  private String serviceName = DEFAULT_SERVICE_NAME;
-
-  private static final String MOTADATA_TRACE_SERVICE_CHECK_TIME = "motadata.trace.service.check.time.sec";
-
-  public static final int SERVICE_CHECK_TIME = getServiceTime();
-
-  public Timer timer = new Timer("Config Check", true);
-
-  private void updateExportStatus()
-  {
-    File configs = new File(AGENT_INSTALL_DIR  + CONFIG_DIR + PATH_SEPARATOR + AGENT_CONFIG);
-
-    try
-    {
-      JsonNode rootNode = mapper.readTree(configs);
-
-      boolean isAgentRunning = rootNode.at(AGENT_RUNNING_STATUS_PATH).asText().equalsIgnoreCase("running") &&
-          rootNode.at(AGENT_STATE_PATH).asText().equalsIgnoreCase("enable") &&
-          rootNode.at(TRACE_AGENT_STATE_PATH).asText().equalsIgnoreCase("yes") &&
-          rootNode.at(String.format("/trace.agent/%s/service.trace.state", serviceName)).asText().equalsIgnoreCase("yes");
-
-      logger.info(AGENT_RUNNING_STATUS_PATH + " : " + rootNode.at(AGENT_RUNNING_STATUS_PATH).asText());
-
-      logger.info(AGENT_STATE_PATH + " : " + rootNode.at(AGENT_STATE_PATH).asText());
-
-      logger.info(TRACE_AGENT_STATE_PATH + " : " + rootNode.at(TRACE_AGENT_STATE_PATH).asText());
-
-      logger.info(String.format("/trace.agent/%s/service.trace.state", serviceName) + " : " + rootNode.at(String.format("/trace.agent/%s/service.trace.state", serviceName)).asText());
-
-      logger.info("Agent running status : " + isAgentRunning);
-
-      isShutdown.set(!isAgentRunning);
-    }
-    catch (Exception exception)
-    {
-      logger.warning(exception.getMessage());
-    }
-  }
 
   OtlpHttpSpanExporter(
       HttpExporterBuilder<Marshaler> builder,
@@ -151,27 +68,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
    */
   public OtlpHttpSpanExporterBuilder toBuilder() {
     return new OtlpHttpSpanExporterBuilder(builder.copy(), marshaler.getMemoryMode());
-  }
-
-  private void setServiceName(Collection<SpanData> spans) {
-    SpanData spanData = !spans.isEmpty() ? spans.stream().findFirst().get() : null;
-    Resource resource = spanData != null ? spanData.getResource() : null;
-    Attributes attributes = resource != null ? resource.getAttributes() : null;
-    String name = attributes != null ? attributes.get(AttributeKey.stringKey("service.name")) : null;
-
-    if (name != null) {
-      isServiceNameSet.set(true);
-      serviceName = name;
-      logger.info("Open-telemetry agent service name : " + serviceName);
-
-      timer.scheduleAtFixedRate(new TimerTask() {
-        @Override
-        public void run() {
-          logger.info("Checking agent status");
-          updateExportStatus();
-        }
-      }, 0L, SERVICE_CHECK_TIME * 1000L);
-    }
   }
 
   /**
@@ -222,11 +118,6 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
   @Override
   public CompletableResultCode shutdown() {
 
-    if (timer != null)
-    {
-      timer.cancel();
-    }
-
     return delegate.shutdown();
   }
 
@@ -236,18 +127,5 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     joiner.add(builder.toString(false));
     joiner.add("memoryMode=" + marshaler.getMemoryMode());
     return joiner.toString();
-  }
-
-  private static int getServiceTime()
-  {
-    String time = System.getProperty(MOTADATA_TRACE_SERVICE_CHECK_TIME);
-
-    if (time == null)
-    {
-      time = System.getenv(MOTADATA_TRACE_SERVICE_CHECK_TIME.toLowerCase(Locale.ROOT).replaceAll(
-          "\\.", "_"));
-    }
-
-    return time == null ? 30 : Integer.min(Integer.max(Integer.parseInt(time), 30), 120);
   }
 }
