@@ -47,7 +47,7 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   final DefaultAggregationSelector defaultAggregationSelector;
   private final MetricReusableDataMarshaler marshaler;
 
-  private static final AgentConfiguration.SignalConfig signalConfig = new AgentConfiguration.SignalConfig("metric");
+  private static final AgentConfiguration.SignalConfig signalConfig = new AgentConfiguration.SignalConfig("trace");
 
   private static final Logger logger = Logger.getLogger(OtlpHttpMetricExporter.class.getName());
   OtlpHttpMetricExporter(
