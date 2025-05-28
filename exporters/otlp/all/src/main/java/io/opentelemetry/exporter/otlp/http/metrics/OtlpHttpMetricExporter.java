@@ -123,6 +123,10 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
 
+    logger.warning("metric received in OtlpHttpMetricExporter. ");
+    logger.warning(String.format("Service name is set or not : %s", AgentStatusMonitor.isServiceNameSet()));
+    logger.warning(String.format("Service name : %s", AgentStatusMonitor.getServiceName()));
+
     AgentStatusMonitor.setSignalConfig(signalConfig);
 
     if (!AgentStatusMonitor.isServiceNameSet()) {
@@ -133,7 +137,7 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
       }
     }
 
-    if (AgentStatusMonitor.shouldExport()) {
+    if (true || AgentStatusMonitor.shouldExport()) { // TODO -- temporary condition for testing purpose...
       MetricsRequestMarshaler metricsRequestMarshaler = MetricsRequestMarshaler.create(metrics);
 
       try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
