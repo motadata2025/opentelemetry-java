@@ -164,11 +164,13 @@ public final class PeriodicMetricReader implements MetricReader {
             flushResult.succeed();
             exportAvailable.set(true);
           } else {
+            logger.info("..................................................before export.............................");
             CompletableResultCode result = exporter.export(metricData);
             result.whenComplete(
                 () -> {
                   if (!result.isSuccess()) {
                     logger.log(Level.FINE, "Exporter failed");
+                    logger.warning(String.format("------------------%s", result.getFailureThrowable()));
                   }
                   flushResult.succeed();
                   exportAvailable.set(true);

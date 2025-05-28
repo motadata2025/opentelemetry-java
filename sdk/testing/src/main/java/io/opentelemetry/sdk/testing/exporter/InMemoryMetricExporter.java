@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Logger;
 
 /**
  * A {@link MetricExporter} implementation that can be used to test OpenTelemetry integration.
@@ -60,6 +61,8 @@ public final class InMemoryMetricExporter implements MetricExporter {
   private final Queue<MetricData> finishedMetricItems = new ConcurrentLinkedQueue<>();
   private final AggregationTemporality aggregationTemporality;
   private boolean isStopped = false;
+
+  private static final Logger logger = Logger.getLogger(InMemoryMetricExporter.class.getName());
 
   private InMemoryMetricExporter(AggregationTemporality aggregationTemporality) {
     this.aggregationTemporality = aggregationTemporality;
@@ -108,6 +111,7 @@ public final class InMemoryMetricExporter implements MetricExporter {
    */
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
+    logger.info("..................................We are inside InMemoryMetricExporter.............................");
     if (isStopped) {
       return CompletableResultCode.ofFailure();
     }
