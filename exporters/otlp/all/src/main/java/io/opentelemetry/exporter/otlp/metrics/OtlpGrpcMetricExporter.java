@@ -9,6 +9,7 @@ import io.opentelemetry.exporter.internal.grpc.GrpcExporter;
 import io.opentelemetry.exporter.internal.grpc.GrpcExporterBuilder;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.exporter.internal.otlp.metrics.MetricReusableDataMarshaler;
+import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.metrics.Aggregation;
@@ -20,6 +21,7 @@ import io.opentelemetry.sdk.metrics.export.DefaultAggregationSelector;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Collection;
 import java.util.StringJoiner;
+import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -37,6 +39,8 @@ public final class OtlpGrpcMetricExporter implements MetricExporter {
   // Visible for testing
   final DefaultAggregationSelector defaultAggregationSelector;
   private final MetricReusableDataMarshaler marshaler;
+
+  private static final Logger logger = Logger.getLogger(OtlpGrpcMetricExporter.class.getName());
 
   /**
    * Returns a new {@link OtlpGrpcMetricExporter} using the default values.
@@ -110,6 +114,9 @@ public final class OtlpGrpcMetricExporter implements MetricExporter {
    */
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
+
+    logger.info("Exporting GRPc metrics....");
+
     return marshaler.export(metrics);
   }
 

@@ -105,6 +105,9 @@ public final class OtlpStdoutMetricExporter implements MetricExporter {
 
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
+
+    LOGGER.info("Exporting Stdout metrics...");
+
     if (isShutdown.get()) {
       return CompletableResultCode.ofFailure();
     }
