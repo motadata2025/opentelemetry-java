@@ -13,14 +13,12 @@ import io.opentelemetry.exporter.internal.http.HttpExporter;
 import io.opentelemetry.exporter.internal.http.HttpExporterBuilder;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.exporter.internal.otlp.traces.SpanReusableDataMarshaler;
-import io.opentelemetry.exporter.internal.otlp.traces.TraceRequestMarshaler;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,9 +31,6 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
-import org.apache.commons.io.FileUtils;
-import org.xerial.snappy.Snappy;
-import java.io.ByteArrayOutputStream;
 
 /**
  * Exports spans using OTLP via HTTP, using OpenTelemetry's protobuf model.
@@ -188,7 +183,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
 
-    if (!isServiceNameSet.get()) {
+    /*if (!isServiceNameSet.get()) {
       setServiceName(spans);
     }
 
@@ -208,7 +203,7 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
     else
     {
       logger.info("Agent is not running, hence skipping the export");
-    }
+    }*/
 
     return CompletableResultCode.ofSuccess();
   }
