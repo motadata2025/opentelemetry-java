@@ -140,28 +140,22 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
       }
     }
 
-    if (true
-        || AgentStatusMonitor
-            .shouldExport()) { // TODO -- temporary condition for testing purpose...
-      MetricsRequestMarshaler metricsRequestMarshaler = MetricsRequestMarshaler.create(metrics);
+    MetricsRequestMarshaler metricsRequestMarshaler = MetricsRequestMarshaler.create(metrics);
 
-      try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-        metricsRequestMarshaler.writeBinaryTo(output);
+    try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+      metricsRequestMarshaler.writeBinaryTo(output);
 
-        FileUtils.writeByteArrayToFile(
-            new File(
-                AgentConfiguration.DATA_DIR
-                    + String.format(
-                        AgentStatusMonitor.getSignalFileFormat(),
-                        AgentStatusMonitor.getServiceName(),
-                        System.currentTimeMillis())),
-            Snappy.compress(output.toByteArray()));
+      FileUtils.writeByteArrayToFile(
+          new File(
+              AgentConfiguration.DATA_DIR
+                  + String.format(
+                  AgentStatusMonitor.getSignalFileFormat(),
+                  AgentStatusMonitor.getServiceName(),
+                  System.currentTimeMillis())),
+          Snappy.compress(output.toByteArray()));
 
-      } catch (IOException exception) {
-        logger.warning("Failed to write metric request marshaller. " + exception.getMessage());
-      }
-    } else {
-      logger.info("Agent is not running, hence skipping the export");
+    } catch (IOException exception) {
+      logger.warning("Failed to write metric request marshaller. " + exception.getMessage());
     }
 
     return CompletableResultCode.ofSuccess();
