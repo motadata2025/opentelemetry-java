@@ -111,7 +111,8 @@ public final class InMemoryMetricExporter implements MetricExporter {
    */
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
-    logger.info("..................................We are inside InMemoryMetricExporter.............................");
+    logger.info(
+        "..................................We are inside InMemoryMetricExporter.............................");
     if (isStopped) {
       return CompletableResultCode.ofFailure();
     }

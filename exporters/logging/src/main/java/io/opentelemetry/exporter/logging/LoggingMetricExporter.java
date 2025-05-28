@@ -67,7 +67,8 @@ public final class LoggingMetricExporter implements MetricExporter {
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
 
-    logger.info("............................ We are sending LoggingMetricExporter.......................");
+    logger.info(
+        "............................ We are sending LoggingMetricExporter.......................");
 
     if (isShutdown.get()) {
       return CompletableResultCode.ofFailure();

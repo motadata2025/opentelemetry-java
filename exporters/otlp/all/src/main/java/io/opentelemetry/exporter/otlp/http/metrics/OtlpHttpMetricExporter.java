@@ -24,8 +24,6 @@ import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
 import io.opentelemetry.sdk.metrics.export.DefaultAggregationSelector;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.resources.Resource;
-import org.apache.commons.io.FileUtils;
-import org.xerial.snappy.Snappy;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +39,8 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
+import org.apache.commons.io.FileUtils;
+import org.xerial.snappy.Snappy;
 
 /**
  * Exports metrics using OTLP via HTTP, using OpenTelemetry's protobuf model.
@@ -78,51 +78,64 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  public static final String AGENT_INSTALL_DIR = Optional.ofNullable(System.getProperty("otel.javaagent.configuration-file")).map(
-      Paths::get).map(
-      Path::getParent).map(Path::getParent).orElseThrow(() -> new IllegalStateException("Invalid configuration file path")).toString() + PATH_SEPARATOR;
+  public static final String AGENT_INSTALL_DIR =
+      Optional.ofNullable(System.getProperty("otel.javaagent.configuration-file"))
+              .map(Paths::get)
+              .map(Path::getParent)
+              .map(Path::getParent)
+              .orElseThrow(() -> new IllegalStateException("Invalid configuration file path"))
+              .toString()
+          + PATH_SEPARATOR;
 
   public static final String DATA_DIR = AGENT_INSTALL_DIR + "cache" + PATH_SEPARATOR;
 
-  public static final String TRACE_FILE_FORMAT = "trace-%s-%s.cache"; // trace_servicename-653545242231.cache
+  public static final String TRACE_FILE_FORMAT =
+      "trace-%s-%s.cache"; // trace_servicename-653545242231.cache
 
   private static final String DEFAULT_SERVICE_NAME = "unknown_service";
 
   private String serviceName = DEFAULT_SERVICE_NAME;
 
-  private static final String MOTADATA_TRACE_SERVICE_CHECK_TIME = "motadata.trace.service.check.time.sec";
+  private static final String MOTADATA_TRACE_SERVICE_CHECK_TIME =
+      "motadata.trace.service.check.time.sec";
 
   public static final int SERVICE_CHECK_TIME = getServiceTime();
 
   public Timer timer = new Timer("Config Check", true);
 
-  private void updateExportStatus()
-  {
-    File configs = new File(AGENT_INSTALL_DIR  + CONFIG_DIR + PATH_SEPARATOR + AGENT_CONFIG);
+  private void updateExportStatus() {
+    File configs = new File(AGENT_INSTALL_DIR + CONFIG_DIR + PATH_SEPARATOR + AGENT_CONFIG);
 
-    try
-    {
+    try {
       JsonNode rootNode = mapper.readTree(configs);
 
-      boolean isAgentRunning = rootNode.at(AGENT_RUNNING_STATUS_PATH).asText().equalsIgnoreCase("running") &&
-          rootNode.at(AGENT_STATE_PATH).asText().equalsIgnoreCase("enable") &&
-          rootNode.at(TRACE_AGENT_STATE_PATH).asText().equalsIgnoreCase("yes") &&
-          rootNode.at(String.format("/trace.agent/%s/service.trace.state", serviceName)).asText().equalsIgnoreCase("yes");
+      boolean isAgentRunning =
+          rootNode.at(AGENT_RUNNING_STATUS_PATH).asText().equalsIgnoreCase("running")
+              && rootNode.at(AGENT_STATE_PATH).asText().equalsIgnoreCase("enable")
+              && rootNode.at(TRACE_AGENT_STATE_PATH).asText().equalsIgnoreCase("yes")
+              && rootNode
+                  .at(String.format("/trace.agent/%s/service.trace.state", serviceName))
+                  .asText()
+                  .equalsIgnoreCase("yes");
 
-      logger.info(AGENT_RUNNING_STATUS_PATH + " : " + rootNode.at(AGENT_RUNNING_STATUS_PATH).asText());
+      logger.info(
+          AGENT_RUNNING_STATUS_PATH + " : " + rootNode.at(AGENT_RUNNING_STATUS_PATH).asText());
 
       logger.info(AGENT_STATE_PATH + " : " + rootNode.at(AGENT_STATE_PATH).asText());
 
       logger.info(TRACE_AGENT_STATE_PATH + " : " + rootNode.at(TRACE_AGENT_STATE_PATH).asText());
 
-      logger.info(String.format("/trace.agent/%s/service.trace.state", serviceName) + " : " + rootNode.at(String.format("/trace.agent/%s/service.trace.state", serviceName)).asText());
+      logger.info(
+          String.format("/trace.agent/%s/service.trace.state", serviceName)
+              + " : "
+              + rootNode
+                  .at(String.format("/trace.agent/%s/service.trace.state", serviceName))
+                  .asText());
 
       logger.info("Agent running status : " + isAgentRunning);
 
       isShutdown.set(!isAgentRunning);
-    }
-    catch (Exception exception)
-    {
+    } catch (Exception exception) {
       logger.warning(exception.getMessage());
     }
   }
@@ -212,15 +225,16 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
       try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
         traceRequestMarshaler.writeBinaryTo(output);
 
-        FileUtils.writeByteArrayToFile(new File(DATA_DIR +
-            String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())), Snappy.compress(output.toByteArray()));
+        FileUtils.writeByteArrayToFile(
+            new File(
+                DATA_DIR
+                    + String.format(TRACE_FILE_FORMAT, serviceName, System.currentTimeMillis())),
+            Snappy.compress(output.toByteArray()));
 
       } catch (IOException exception) {
         logger.warning("Failed to write trace request marshaller. " + exception.getMessage());
       }
-    }
-    else
-    {
+    } else {
       logger.info("Agent is not running, hence skipping the export");
     }
 
@@ -241,8 +255,7 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   @Override
   public CompletableResultCode shutdown() {
 
-    if (timer != null)
-    {
+    if (timer != null) {
       timer.cancel();
     }
 
@@ -253,20 +266,24 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
     MetricData metricData = !metrics.isEmpty() ? metrics.stream().findFirst().get() : null;
     Resource resource = metricData != null ? metricData.getResource() : null;
     Attributes attributes = resource != null ? resource.getAttributes() : null;
-    String name = attributes != null ? attributes.get(AttributeKey.stringKey("service.name")) : null;
+    String name =
+        attributes != null ? attributes.get(AttributeKey.stringKey("service.name")) : null;
 
     if (name != null) {
       isServiceNameSet.set(true);
       serviceName = name;
       logger.info("Open-telemetry agent service name : " + serviceName);
 
-      timer.scheduleAtFixedRate(new TimerTask() {
-        @Override
-        public void run() {
-          logger.info("Checking agent status");
-          updateExportStatus();
-        }
-      }, 0L, SERVICE_CHECK_TIME * 1000L);
+      timer.scheduleAtFixedRate(
+          new TimerTask() {
+            @Override
+            public void run() {
+              logger.info("Checking agent status");
+              updateExportStatus();
+            }
+          },
+          0L,
+          SERVICE_CHECK_TIME * 1000L);
     }
   }
 
@@ -284,14 +301,13 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
     return joiner.toString();
   }
 
-  private static int getServiceTime()
-  {
+  private static int getServiceTime() {
     String time = System.getProperty(MOTADATA_TRACE_SERVICE_CHECK_TIME);
 
-    if (time == null)
-    {
-      time = System.getenv(MOTADATA_TRACE_SERVICE_CHECK_TIME.toLowerCase(Locale.ROOT).replaceAll(
-          "\\.", "_"));
+    if (time == null) {
+      time =
+          System.getenv(
+              MOTADATA_TRACE_SERVICE_CHECK_TIME.toLowerCase(Locale.ROOT).replaceAll("\\.", "_"));
     }
 
     return time == null ? 30 : Integer.min(Integer.max(Integer.parseInt(time), 30), 120);
