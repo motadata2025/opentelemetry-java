@@ -14,7 +14,6 @@ import io.opentelemetry.exporter.internal.http.HttpExporterBuilder;
 import io.opentelemetry.exporter.internal.marshal.Marshaler;
 import io.opentelemetry.exporter.internal.otlp.metrics.MetricReusableDataMarshaler;
 import io.opentelemetry.exporter.internal.otlp.metrics.MetricsRequestMarshaler;
-import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.metrics.Aggregation;
