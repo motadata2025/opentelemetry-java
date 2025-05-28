@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
- * Monitors agent configuration status and manages periodic status checking.
- * This class provides centralized agent status monitoring for custom agent integration.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public final class AgentStatusMonitor {
 
@@ -53,18 +53,22 @@ public final class AgentStatusMonitor {
       serviceName = name;
       logger.info("Open-telemetry agent service name : " + name);
 
-      int checkInterval = AgentConfiguration.resolveServiceCheckTime(signalConfig.getCheckTimeProperty());
+      int checkInterval =
+          AgentConfiguration.resolveServiceCheckTime(signalConfig.getCheckTimeProperty());
 
       if (timer == null) {
         timer = new Timer("Agent Config Check", true);
 
-        timer.scheduleAtFixedRate(new TimerTask() {
-          @Override
-          public void run() {
-            logger.info("Checking agent status");
-            updateExportStatus();
-          }
-        }, 0L, checkInterval * 1000L);
+        timer.scheduleAtFixedRate(
+            new TimerTask() {
+              @Override
+              public void run() {
+                logger.info("Checking agent status");
+                updateExportStatus();
+              }
+            },
+            0L,
+            checkInterval * 1000L);
       }
     }
   }
@@ -121,9 +125,7 @@ public final class AgentStatusMonitor {
     return isServiceNameSet.get();
   }
 
-  /**
-   * Shuts down the monitor and cancels all scheduled tasks.
-   */
+  /** Shuts down the monitor and cancels all scheduled tasks. */
   public static void shutdown() {
     if (timer != null) {
       timer.cancel();
@@ -136,19 +138,37 @@ public final class AgentStatusMonitor {
     try {
       JsonNode rootNode = mapper.readTree(configFile);
 
-      boolean isAgentRunning = rootNode.at(AgentConfiguration.AGENT_RUNNING_STATUS_PATH).asText().equalsIgnoreCase("running") &&
-          rootNode.at(AgentConfiguration.AGENT_STATE_PATH).asText().equalsIgnoreCase("enable") &&
-          rootNode.at(signalConfig.getAgentStatusPath()).asText().equalsIgnoreCase("yes") &&
-          rootNode.at(signalConfig.getServiceStatePath(serviceName)).asText().equalsIgnoreCase("yes");
+      boolean isAgentRunning =
+          rootNode
+                  .at(AgentConfiguration.AGENT_RUNNING_STATUS_PATH)
+                  .asText()
+                  .equalsIgnoreCase("running")
+              && rootNode
+                  .at(AgentConfiguration.AGENT_STATE_PATH)
+                  .asText()
+                  .equalsIgnoreCase("enable")
+              && rootNode.at(signalConfig.getAgentStatusPath()).asText().equalsIgnoreCase("yes")
+              && rootNode
+                  .at(signalConfig.getServiceStatePath(serviceName))
+                  .asText()
+                  .equalsIgnoreCase("yes");
 
-      logger.info(AgentConfiguration.AGENT_RUNNING_STATUS_PATH + " : " + 
-          rootNode.at(AgentConfiguration.AGENT_RUNNING_STATUS_PATH).asText());
-      logger.info(AgentConfiguration.AGENT_STATE_PATH + " : " + 
-          rootNode.at(AgentConfiguration.AGENT_STATE_PATH).asText());
-      logger.info(signalConfig.getAgentStatusPath() + " : " + 
-          rootNode.at(signalConfig.getAgentStatusPath()).asText());
-      logger.info(signalConfig.getServiceStatePath(serviceName) + " : " + 
-          rootNode.at(signalConfig.getServiceStatePath(serviceName)).asText());
+      logger.info(
+          AgentConfiguration.AGENT_RUNNING_STATUS_PATH
+              + " : "
+              + rootNode.at(AgentConfiguration.AGENT_RUNNING_STATUS_PATH).asText());
+      logger.info(
+          AgentConfiguration.AGENT_STATE_PATH
+              + " : "
+              + rootNode.at(AgentConfiguration.AGENT_STATE_PATH).asText());
+      logger.info(
+          signalConfig.getAgentStatusPath()
+              + " : "
+              + rootNode.at(signalConfig.getAgentStatusPath()).asText());
+      logger.info(
+          signalConfig.getServiceStatePath(serviceName)
+              + " : "
+              + rootNode.at(signalConfig.getServiceStatePath(serviceName)).asText());
       logger.info("Agent running status : " + isAgentRunning);
 
       isShutdown.set(!isAgentRunning);

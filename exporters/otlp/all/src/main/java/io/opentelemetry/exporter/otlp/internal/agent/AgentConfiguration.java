@@ -5,15 +5,15 @@
 
 package io.opentelemetry.exporter.otlp.internal.agent;
 
-import java.util.Locale;
-import java.util.Optional;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
+import java.util.Optional;
 
 /**
- * Configuration constants and utilities for agent-based export functionality.
- * This class provides centralized configuration management for custom agent integration.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public final class AgentConfiguration {
 
@@ -27,16 +27,18 @@ public final class AgentConfiguration {
   public static final String AGENT_STATE_PATH = "/agent/agent.state";
 
   // Directory paths
-  public static final String AGENT_INSTALL_DIR = Optional.ofNullable(
-      System.getProperty("otel.javaagent.configuration-file"))
-      .map(Paths::get)
-      .map(Path::getParent)
-      .map(Path::getParent)
-      .orElseThrow(() -> new IllegalStateException("Invalid configuration file path"))
-      .toString() + PATH_SEPARATOR;
+  public static final String AGENT_INSTALL_DIR =
+      Optional.ofNullable(System.getProperty("otel.javaagent.configuration-file"))
+              .map(Paths::get)
+              .map(Path::getParent)
+              .map(Path::getParent)
+              .orElseThrow(() -> new IllegalStateException("Invalid configuration file path"))
+              .toString()
+          + PATH_SEPARATOR;
 
   public static final String DATA_DIR = AGENT_INSTALL_DIR + "cache" + PATH_SEPARATOR;
-  public static final String CONFIG_FILE_PATH = AGENT_INSTALL_DIR + CONFIG_DIR + PATH_SEPARATOR + AGENT_CONFIG;
+  public static final String CONFIG_FILE_PATH =
+      AGENT_INSTALL_DIR + CONFIG_DIR + PATH_SEPARATOR + AGENT_CONFIG;
 
   // Default values
   public static final String DEFAULT_SERVICE_NAME_VALUE = DEFAULT_SERVICE_NAME;
@@ -67,15 +69,14 @@ public final class AgentConfiguration {
 
     try {
       int parsedTime = Integer.parseInt(time);
-      return Integer.min(Integer.max(parsedTime, MIN_CHECK_INTERVAL_SECONDS), MAX_CHECK_INTERVAL_SECONDS);
+      return Integer.min(
+          Integer.max(parsedTime, MIN_CHECK_INTERVAL_SECONDS), MAX_CHECK_INTERVAL_SECONDS);
     } catch (NumberFormatException e) {
       return DEFAULT_CHECK_INTERVAL_SECONDS;
     }
   }
 
-  /**
-   * Signal-specific configuration for different telemetry types.
-   */
+  /** Signal-specific configuration for different telemetry types. */
   public static final class SignalConfig {
     private final String agentStatusPath;
     private final String serviceStatePath;
@@ -84,7 +85,8 @@ public final class AgentConfiguration {
 
     public SignalConfig(String signalType) {
       this.agentStatusPath = String.format("/agent/%s.agent.status", signalType);
-      this.serviceStatePath = String.format("/%s.agent/%%s/service.%s.state", signalType, signalType);
+      this.serviceStatePath =
+          String.format("/%s.agent/%%s/service.%s.state", signalType, signalType);
       this.filePrefix = signalType;
       this.checkTimeProperty = String.format("motadata.%s.service.check.time.sec", signalType);
     }

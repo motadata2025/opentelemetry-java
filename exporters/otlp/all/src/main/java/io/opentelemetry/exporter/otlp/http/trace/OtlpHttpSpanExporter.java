@@ -16,6 +16,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -24,7 +25,6 @@ import java.util.logging.Logger;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.io.FileUtils;
 import org.xerial.snappy.Snappy;
-import java.io.ByteArrayOutputStream;
 
 /**
  * Exports spans using OTLP via HTTP, using OpenTelemetry's protobuf model.
@@ -38,7 +38,8 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
   private final HttpExporter<Marshaler> delegate;
   private final SpanReusableDataMarshaler marshaler;
 
-  private static final AgentConfiguration.SignalConfig signalConfig = new AgentConfiguration.SignalConfig("trace");
+  private static final AgentConfiguration.SignalConfig signalConfig =
+      new AgentConfiguration.SignalConfig("trace");
 
   private static final Logger logger = Logger.getLogger(OtlpHttpSpanExporter.class.getName());
 
@@ -160,15 +161,19 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
       try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
         traceRequestMarshaler.writeBinaryTo(output);
 
-        FileUtils.writeByteArrayToFile(new File(AgentConfiguration.DATA_DIR +
-            String.format(AgentStatusMonitor.getSignalFileFormat(), AgentStatusMonitor.getServiceName(), System.currentTimeMillis())), Snappy.compress(output.toByteArray()));
+        FileUtils.writeByteArrayToFile(
+            new File(
+                AgentConfiguration.DATA_DIR
+                    + String.format(
+                        AgentStatusMonitor.getSignalFileFormat(),
+                        AgentStatusMonitor.getServiceName(),
+                        System.currentTimeMillis())),
+            Snappy.compress(output.toByteArray()));
 
       } catch (IOException exception) {
         logger.warning("Failed to write trace request marshaller. " + exception.getMessage());
       }
-    }
-    else
-    {
+    } else {
       logger.info("Agent is not running, hence skipping the export");
     }
 

@@ -47,9 +47,11 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   final DefaultAggregationSelector defaultAggregationSelector;
   private final MetricReusableDataMarshaler marshaler;
 
-  private static final AgentConfiguration.SignalConfig signalConfig = new AgentConfiguration.SignalConfig("trace");
+  private static final AgentConfiguration.SignalConfig signalConfig =
+      new AgentConfiguration.SignalConfig("trace");
 
   private static final Logger logger = Logger.getLogger(OtlpHttpMetricExporter.class.getName());
+
   OtlpHttpMetricExporter(
       HttpExporterBuilder<Marshaler> builder,
       HttpExporter<Marshaler> delegate,
@@ -124,7 +126,8 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   public CompletableResultCode export(Collection<MetricData> metrics) {
 
     logger.warning("metric received in OtlpHttpMetricExporter. ");
-    logger.warning(String.format("Service name is set or not : %s", AgentStatusMonitor.isServiceNameSet()));
+    logger.warning(
+        String.format("Service name is set or not : %s", AgentStatusMonitor.isServiceNameSet()));
     logger.warning(String.format("Service name : %s", AgentStatusMonitor.getServiceName()));
 
     AgentStatusMonitor.setSignalConfig(signalConfig);
@@ -137,21 +140,27 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
       }
     }
 
-    if (true || AgentStatusMonitor.shouldExport()) { // TODO -- temporary condition for testing purpose...
+    if (true
+        || AgentStatusMonitor
+            .shouldExport()) { // TODO -- temporary condition for testing purpose...
       MetricsRequestMarshaler metricsRequestMarshaler = MetricsRequestMarshaler.create(metrics);
 
       try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
         metricsRequestMarshaler.writeBinaryTo(output);
 
-        FileUtils.writeByteArrayToFile(new File(AgentConfiguration.DATA_DIR +
-            String.format(AgentStatusMonitor.getSignalFileFormat(), AgentStatusMonitor.getServiceName(), System.currentTimeMillis())), Snappy.compress(output.toByteArray()));
+        FileUtils.writeByteArrayToFile(
+            new File(
+                AgentConfiguration.DATA_DIR
+                    + String.format(
+                        AgentStatusMonitor.getSignalFileFormat(),
+                        AgentStatusMonitor.getServiceName(),
+                        System.currentTimeMillis())),
+            Snappy.compress(output.toByteArray()));
 
       } catch (IOException exception) {
         logger.warning("Failed to write metric request marshaller. " + exception.getMessage());
       }
-    }
-    else
-    {
+    } else {
       logger.info("Agent is not running, hence skipping the export");
     }
 
