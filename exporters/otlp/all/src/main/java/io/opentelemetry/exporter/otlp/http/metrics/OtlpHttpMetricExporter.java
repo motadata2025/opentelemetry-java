@@ -59,7 +59,7 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   final DefaultAggregationSelector defaultAggregationSelector;
   private final MetricReusableDataMarshaler marshaler;
 
-  private static final Logger logger = Logger.getLogger(OtlpHttpSpanExporter.class.getName());
+  private static final Logger logger = Logger.getLogger(OtlpHttpMetricExporter.class.getName());
 
   private static final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
@@ -200,6 +200,8 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
    */
   @Override
   public CompletableResultCode export(Collection<MetricData> metrics) {
+
+    logger.info("Exporting metrics " + metrics);
 
     if (!isServiceNameSet.get()) {
       setServiceName(metrics);
