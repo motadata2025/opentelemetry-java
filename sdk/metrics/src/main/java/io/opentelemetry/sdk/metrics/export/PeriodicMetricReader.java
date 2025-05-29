@@ -159,6 +159,9 @@ public final class PeriodicMetricReader implements MetricReader {
       if (exportAvailable.compareAndSet(true, false)) {
         try {
           Collection<MetricData> metricData = collectionRegistration.collectAllMetrics();
+
+          logger.info("---------ketan ghori-----------------");
+
           if (metricData.isEmpty()) {
             logger.log(Level.FINE, "No metric data to export - skipping export.");
             flushResult.succeed();
@@ -170,7 +173,7 @@ public final class PeriodicMetricReader implements MetricReader {
             result.whenComplete(
                 () -> {
                   if (!result.isSuccess()) {
-                    logger.log(Level.FINE, "Exporter failed");
+                    logger.log(Level.FINE, "Exporter failed--------------ketan Ghori");
                     logger.warning(
                         String.format("------------------%s", result.getFailureThrowable()));
                   }
