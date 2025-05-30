@@ -90,7 +90,7 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
   public static final String DATA_DIR = AGENT_INSTALL_DIR + "cache" + PATH_SEPARATOR;
 
   public static final String TRACE_FILE_FORMAT =
-      "trace-%s-%s.cache"; // trace_servicename-653545242231.cache
+      "tracemetric-%s-%s.cache"; // tracemetric_servicename-653545242231.cache
 
   private static final String DEFAULT_SERVICE_NAME = "unknown_service";
 
@@ -220,10 +220,10 @@ public final class OtlpHttpMetricExporter implements MetricExporter {
     }
 
     if (!isShutdown.get() && isServiceNameSet.get()) {
-      MetricsRequestMarshaler traceRequestMarshaler = MetricsRequestMarshaler.create(metrics);
+      MetricsRequestMarshaler metricRequestMarshaler = MetricsRequestMarshaler.create(metrics);
 
       try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-        traceRequestMarshaler.writeBinaryTo(output);
+        metricRequestMarshaler.writeBinaryTo(output);
 
         FileUtils.writeByteArrayToFile(
             new File(
