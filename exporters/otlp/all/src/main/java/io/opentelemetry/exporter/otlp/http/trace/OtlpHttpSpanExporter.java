@@ -86,6 +86,10 @@ public final class OtlpHttpSpanExporter implements SpanExporter {
 
   public Timer timer = new Timer("Config Check", true);
 
+  public void run() {
+
+  }
+
   private void updateExportStatus()
   {
     File configs = new File(AGENT_INSTALL_DIR  + CONFIG_DIR + PATH_SEPARATOR + AGENT_CONFIG);
